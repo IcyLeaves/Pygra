@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Pygra</title>
+    <link rel="stylesheet" href="client/_library/css/element.css" />
+    <style>
+      .el-container {
+        width: 100vw;
+        flex-direction: column;
+      }
+      .el-main {
+        width: 100vw;
+        color: #333;
+        text-align: center;
+        line-height: 160px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <el-container>
+        <el-main style="background-color: #c5cae9">
+          <el-row> PYGRA </el-row>
+          <el-button @click="enterRoom">进入房间</el-button>
+        </el-main>
+        <el-main style="background-color: #bbdefb">
+          <el-row> 游戏目标 </el-row>
+        </el-main>
+        <el-main style="background-color: #b3e5fc">
+          <el-row> 回合进行 </el-row>
+        </el-main>
+      </el-container>
+    </div>
+    <script src="client/socket.io.js"></script>
+    <script src="client/_library/js/jquery.min.js"></script>
+    <script src="client/_library/js/vue.js"></script>
+    <script src="client/_library/js/element.js"></script>
+
+    <script src="client/js/index.js"></script>
+  </body>
+</html>
