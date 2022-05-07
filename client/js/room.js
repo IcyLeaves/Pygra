@@ -63,7 +63,12 @@ var app = new Vue({
     serverJoinRoom(data) {
       console.log(data);
       if (data.status != "success") {
-        this.LOG_ERROR("加入房间失败：人数已满");
+        if (this.socket.id == data.playerid) {
+          this.LOG_ERROR("加入房间失败：人数已满");
+          setTimeout(() => {
+            window.location.href = "/";
+          }, 2000);
+        }
       } else {
         this.LOG_SUCCESS("玩家" + data.playerid + "已加入房间");
       }

@@ -7,6 +7,10 @@
     <title>Pygra</title>
     <link rel="stylesheet" href="/client/_library/css/element.css" />
     <style>
+      .el-container{
+        display: flex;
+        flex-direction: column;
+      }
       .el-main {
         display: flex;
         flex-direction: column;
@@ -16,7 +20,7 @@
       .board-box {
         border: 2px solid gray;
         border-radius: 3px;
-        margin: 2px;
+        margin: 0 10px;
         height: 5em;
         width: 5em;
         display: flex;
@@ -25,33 +29,40 @@
         position: relative;
         min-width: 3rem;
       }
+      .el-row{
+        margin: 20px 0;
+      }
     </style>
   </head>
   <body>
     <div id="app">
       <el-container>
-        <el-main> Player 1 </el-main>
-        <el-main>
-          <div id="game-board">
-            <el-row
-              v-for="(item,i) in 4"
-              :key="'row'+i"
-              type="flex"
-              justify="center"
-            >
-              <div
-                class="board-box"
-                v-for="(item,j) in 4"
-                :key="'box'+i+j"
-                :id="'box-'+i+'-'+j"
-                :data-i="i"
-                :data-j="j"
-                @click="clickBox"
-              ></div>
-            </el-row>
-          </div>
-        </el-main>
-        <el-main> Player 2 </el-main>
+        <el-row>
+          <el-col v-for="(player,i) in ROOM_DATA.players" :key="player.id" :span="12">
+            <el-row> Player {{i+1}} </el-row>
+            <el-row> {{player.name}} </el-row>
+          </el-col>
+        </el-row>
+        
+        <el-row><div id="game-board">
+          <el-row
+            v-for="(item,i) in 4"
+            :key="'row'+i"
+            type="flex"
+            justify="center"
+          >
+            <div
+              class="board-box"
+              v-for="(item,j) in 4"
+              :key="'box'+i+j"
+              :id="'box-'+i+'-'+j"
+              :data-i="i"
+              :data-j="j"
+              @click="clickBox"
+            ></div>
+          </el-row>
+        </div>
+      </el-main> </el-row>
       </el-container>
     </div>
 

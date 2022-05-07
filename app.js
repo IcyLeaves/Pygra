@@ -18,11 +18,24 @@ serv.listen(39200);
 
 console.log("Server started.");
 //common
-var removeEle = (arr, target) => {
+var removePlayer = (arr, target) => {
   var idx = arr.indexOf(target);
-  if (idx > -1) {
-    arr.splice(idx, 1);
+  for (var idx = 0; idx < arr.length; idx++) {
+    if (arr[idx].id == target) {
+      arr[idx] = {};
+    }
   }
+};
+var addPlayer = (arr, playerid) => {
+  for (var i = 0; i < arr.length; i++) {
+    if (arr[i].id) continue;
+    arr[i] = {
+      id: playerid,
+      name: playerid,
+    };
+    return true;
+  }
+  return false;
 };
 
 var io = require("socket.io")(serv, {});
@@ -37,6 +50,9 @@ function createRoom(roomid) {
     players: [],
     boxArray: [],
   };
+  for (var idx = 0; idx < ROOM_MAX_PLAYERS; idx++) {
+    initRoom.players.push({});
+  }
   for (var row = 0; row < 4; row++) {
     var boxRow = [];
     for (var col = 0; col < 4; col++) {
@@ -55,11 +71,8 @@ function joinRoom(playerid, roomid) {
     createRoom(roomid);
   }
   //如果房间不足两人，加入
-  if (ROOM_LIST[roomid].players.length < ROOM_MAX_PLAYERS) {
+  if (addPlayer(ROOM_LIST[roomid].players, playerid)) {
     console.log("Player[", playerid, "] Entered the Room:", roomid);
-    ROOM_LIST[roomid].players.push(playerid);
-    SOCKET_LIST[playerid].room = roomid;
-
     io.sockets.emit(`serverJoinRoom${roomid}`, {
       status: "success",
       playerid,
@@ -80,7 +93,7 @@ function leaveRoom(playerid, roomid) {
     playerid,
   });
 
-  removeEle(ROOM_LIST[roomid].players, playerid);
+  removePlayer(ROOM_LIST[roomid].players, playerid);
   if (ROOM_LIST[roomid].players.length == 0) {
     delete ROOM_LIST[roomid];
   }
@@ -96,9 +109,11 @@ io.sockets.on("connection", function (socket) {
 
   SOCKET_LIST[PLAYER_ID] = socket;
   joinRoom(PLAYER_ID, ROOM_ID);
+  io.sockets.emit(`serverUpdate${ROOM_ID}`, ROOM_LIST[ROOM_ID]);
   socket.on("disconnect", function () {
     delete SOCKET_LIST[PLAYER_ID];
     leaveRoom(PLAYER_ID, ROOM_ID);
+    io.sockets.emit(`serverUpdate${ROOM_ID}`, ROOM_LIST[ROOM_ID]);
   });
   socket.on("clientEvent", function (data) {
     var { eventName, eventData } = data;
