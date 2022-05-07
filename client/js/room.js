@@ -3,7 +3,12 @@ var app = new Vue({
   data: {
     socket: undefined,
     roomid: 0,
-    ROOM_DATA: {},
+    ROOM_DATA: {
+      players: [],
+      boxArray: [],
+    },
+    playerIdx: -1,
+    isPrepared: false,
   },
   methods: {
     LOG_SUCCESS(msg) {
@@ -25,18 +30,38 @@ var app = new Vue({
       });
     },
     //UI
-    clickBox(e) {
-      var i = parseInt(e.target.dataset.i);
-      var j = parseInt(e.target.dataset.j);
-      var r = Math.floor(Math.random() * 256);
-      var g = Math.floor(Math.random() * 256);
-      var b = Math.floor(Math.random() * 256);
-      var color = `rgb(${r},${g},${b})`;
-      this.clientEvent("updateBox", {
-        i,
-        j,
-        color,
+    clickStartBtn(e) {
+      this.clientEvent("startGame", {
+        players: this.ROOM_DATA.players,
       });
+    },
+    clickBox(e) {
+      if (this.ROOM_DATA.players[this.playerIdx].turn) {
+        var i = parseInt(e.target.dataset.i);
+        var j = parseInt(e.target.dataset.j);
+
+        console.log(
+          "clickBox",
+          this.playerIdx,
+          i,
+          j,
+          this.ROOM_DATA.boxArray[i][j].canChoose
+        );
+        if (this.ROOM_DATA.boxArray[i][j].canChoose) {
+          console.log("updateBox", {
+            i,
+            j,
+            playerIdx: this.playerIdx,
+            type: 1,
+          });
+          this.clientEvent("updateBox", {
+            i,
+            j,
+            playerIdx: this.playerIdx,
+            type: 1,
+          });
+        }
+      }
     },
     updateBox(i, j, box) {
       $(`#box-${i}-${j}`).css("background-color", box.color);
@@ -47,12 +72,14 @@ var app = new Vue({
         eventName,
         eventData,
       };
-      console.log("send", data);
       this.socket.emit("clientEvent", data);
     },
     serverUpdate(data) {
       console.log(data);
       this.ROOM_DATA = data;
+      if (data.players[0].id == this.socket.id) this.playerIdx = 0;
+      else this.playerIdx = 1;
+      this.isPrepared = true;
       var { boxArray } = data;
       for (var i in boxArray) {
         for (var j in boxArray[i]) {

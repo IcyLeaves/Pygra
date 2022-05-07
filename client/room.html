@@ -20,7 +20,7 @@
       .board-box {
         border: 3px solid gray;
         border-radius: 5px;
-        margin: 0 10px;
+        margin: 5px 10px;
         height: 7em;
         width: 7em;
         display: flex;
@@ -31,7 +31,7 @@
         min-width: 3rem;
       }
       .el-row{
-        margin: 20px 0;
+        margin: 10px 10px;
       }
     </style>
     <style>
@@ -44,27 +44,46 @@
         margin: 0.1em;
       }
     </style>
+    <style>
+      .left-player{
+        background-color: #E3F2FD;
+      }
+      .left-player.turning{
+        background-color: #90CAF9;
+      }
+      .right-player{
+        background-color: #FCE4EC;
+      }
+      .right-player.turning{
+        background-color: #F48FB1;
+      }
+    </style>
   </head>
   <body>
     <div id="app">
-      <el-container>
+      <el-container :show="isPrepared">
         <el-row>
-          <el-col v-for="(player,i) in ROOM_DATA.players" :key="player.id" :span="12">
-            <el-row> Player {{i+1}} </el-row>
-            <el-row> {{player.name}} </el-row>
+          <el-col v-for="(player,i) in ROOM_DATA.players" :key="player.id" :span="12" :class="[i==0?'left-player':'right-player',ROOM_DATA.players[i].turn?'turning':'']">
+            <el-row>
+              <el-col :span="4"> Player {{i+1}} </el-col>
+              <el-col :span="12">{{player.name}} </el-col>
+            </el-row>
+            <el-row>
+              
+            </el-row>
           </el-col>
         </el-row>
         
         <el-row><div id="game-board">
           <el-row
-            v-for="(item,i) in 4"
+            v-for="(itemRow,i) in ROOM_DATA.boxArray"
             :key="'row'+i"
             type="flex"
             justify="center"
           >
             <div
               class="board-box"
-              v-for="(item,j) in 4"
+              v-for="(item,j) in itemRow"
               :key="'box'+i+j"
               :id="'box-'+i+'-'+j"
               :data-i="i"
@@ -72,19 +91,36 @@
               @click="clickBox"
             >
           <el-row>
-            <img src="/client/img/blue-arrow-non.png"></img>
-            <img src="/client/img/blue-circle-non.png"></img>
-            <img src="/client/img/blue-square-non.png"></img>
+            <img src="/client/img/blue-arrow-non.png" class="sign" v-show="item.blues[0].status=='off'"></img>
+            <img src="/client/img/blue-arrow.png" class="sign" v-show="item.blues[0].status=='on'"></img>
+            <img src="/client/img/blue-circle-non.png" class="sign" v-show="item.blues[1].status=='off'"></img>
+            <img src="/client/img/blue-circle.png" class="sign" v-show="item.blues[1].status=='on'"></img>
+            <img src="/client/img/blue-square-non.png" class="sign" v-show="item.blues[2].status=='off'"></img>
+            <img src="/client/img/blue-square.png" class="sign" v-show="item.blues[2].status=='on'"></img>
           </el-row>
           <el-row>
-            <img src="/client/img/red-arrow-non.png"></img>
-            <img src="/client/img/red-circle-non.png"></img>
-            <img src="/client/img/red-square-non.png"></img>
+            <img src="/client/img/blue-arrow.png" class="sign" v-show="item.blues[0].status=='curr'"></img>
+            <img src="/client/img/blue-circle.png" class="sign" v-show="item.blues[1].status=='curr'"></img>
+            <img src="/client/img/blue-square.png" class="sign" v-show="item.blues[2].status=='curr'"></img>
+            <img src="/client/img/red-arrow.png" class="sign" v-show="item.reds[0].status=='curr'"></img>
+            <img src="/client/img/red-circle.png" class="sign" v-show="item.reds[1].status=='curr'"></img>
+            <img src="/client/img/red-square.png" class="sign" v-show="item.reds[2].status=='curr'"></img>
+          </el-row>
+          <el-row>
+            <img src="/client/img/red-arrow-non.png" class="sign" v-show="item.reds[0].status=='off'"></img>
+            <img src="/client/img/red-arrow.png" class="sign" v-show="item.reds[0].status=='on'"></img>
+            <img src="/client/img/red-circle-non.png" class="sign" v-show="item.reds[1].status=='off'"></img>
+            <img src="/client/img/red-circle.png" class="sign" v-show="item.reds[1].status=='on'"></img>
+            <img src="/client/img/red-square-non.png" class="sign" v-show="item.reds[2].status=='off'"></img>
+            <img src="/client/img/red-square.png" class="sign" v-show="item.reds[2].status=='on'"></img>
           </el-row>
           </div>
           </el-row>
         </div>
-      </el-main> </el-row>
+      </el-row>
+      <el-row type="flex" justify="center">
+        <el-button @click="clickStartBtn">开始游戏</el-button>
+      </el-row>
       </el-container>
     </div>
 
