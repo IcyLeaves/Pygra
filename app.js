@@ -51,7 +51,13 @@ function createRoom(roomid) {
     boxArray: [],
   };
   for (var idx = 0; idx < ROOM_MAX_PLAYERS; idx++) {
-    initRoom.players.push({});
+    initRoom.players.push({
+      name: "-",
+      arrows: 5,
+      circles: 5,
+      squares: 5,
+      points: 0,
+    });
   }
   for (var row = 0; row < 4; row++) {
     var boxRow = [];
@@ -94,7 +100,10 @@ function leaveRoom(playerid, roomid) {
   });
 
   removePlayer(ROOM_LIST[roomid].players, playerid);
-  if (ROOM_LIST[roomid].players.length == 0) {
+  if (
+    ROOM_LIST[roomid].players[0].id == 0 &&
+    ROOM_LIST[roomid].players[1].id == 0
+  ) {
     delete ROOM_LIST[roomid];
   }
 }
