@@ -13,15 +13,46 @@
         text-align: center;
         line-height: 160px;
       }
+      .board-box {
+        border: 2px solid gray;
+        border-radius: 3px;
+        margin: 2px;
+        height: 5em;
+        width: 5em;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        position: relative;
+        min-width: 3rem;
+      }
     </style>
   </head>
   <body>
     <div id="app">
-      <el-container
-        ><el-main> Player 1 </el-main>
-        <el-main> GameBoard </el-main>
-        <el-main> Player 2 </el-main></el-container
-      >
+      <el-container>
+        <el-main> Player 1 </el-main>
+        <el-main>
+          <div id="game-board">
+            <el-row
+              v-for="(item,i) in 4"
+              :key="'row'+i"
+              type="flex"
+              justify="center"
+            >
+              <div
+                class="board-box"
+                v-for="(item,j) in 4"
+                :key="'box'+i+j"
+                :id="'box-'+i+'-'+j"
+                :data-i="i"
+                :data-j="j"
+                @click="clickBox"
+              ></div>
+            </el-row>
+          </div>
+        </el-main>
+        <el-main> Player 2 </el-main>
+      </el-container>
     </div>
 
     <script src="/client/socket.io.js"></script>

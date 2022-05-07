@@ -32,14 +32,22 @@ var PLAYER_LIST = {};
 var ROOM_LIST = {};
 var ROOM_MAX_PLAYERS = 2;
 //str=room/12345
-function getRoomId(str) {
-  return parseInt(str.split("/")[2]);
-}
 function createRoom(roomid) {
-  var INIT_ROOM = {
+  var initRoom = {
     players: [],
+    boxArray: [],
   };
-  ROOM_LIST[roomid] = INIT_ROOM;
+  for (var row = 0; row < 4; row++) {
+    var boxRow = [];
+    for (var col = 0; col < 4; col++) {
+      var initBox = {
+        color: "rgb(255,255,255)",
+      };
+      boxRow.push(initBox);
+    }
+    initRoom.boxArray.push(boxRow);
+  }
+  ROOM_LIST[roomid] = initRoom;
 }
 function joinRoom(playerid, roomid) {
   //如果没有这个房间，创建
@@ -48,18 +56,18 @@ function joinRoom(playerid, roomid) {
   }
   //如果房间不足两人，加入
   if (ROOM_LIST[roomid].players.length < ROOM_MAX_PLAYERS) {
-    console.log("Player[", playerid, "] Entered the Room", roomid);
+    console.log("Player[", playerid, "] Entered the Room:", roomid);
     ROOM_LIST[roomid].players.push(playerid);
     SOCKET_LIST[playerid].room = roomid;
 
-    io.sockets.emit(`serverJoinRoom`, {
+    io.sockets.emit(`serverJoinRoom${roomid}`, {
       status: "success",
       playerid,
       roomid,
     });
   } else {
     //如果房间人满了，就弹出，房间已满
-    io.sockets.emit(`serverJoinRoom`, {
+    io.sockets.emit(`serverJoinRoom${roomid}`, {
       status: "full",
       playerid,
       roomid,
@@ -67,8 +75,8 @@ function joinRoom(playerid, roomid) {
   }
 }
 function leaveRoom(playerid, roomid) {
-  console.log("Player[", playerid, "] Leaved the Room", roomid);
-  io.sockets.emit("serverLeaveRoom", {
+  console.log("Player[", playerid, "] Leaved the Room:", roomid);
+  io.sockets.emit(`serverLeaveRoom${roomid}`, {
     playerid,
   });
 
@@ -77,15 +85,26 @@ function leaveRoom(playerid, roomid) {
     delete ROOM_LIST[roomid];
   }
 }
+function updateRoom(data, roomid) {
+  var { i, j, color } = data;
+  var roomData = ROOM_LIST[roomid];
+  roomData.boxArray[i][j].color = color;
+}
 io.sockets.on("connection", function (socket) {
-  var playerid = socket.id;
-  var roomid = getRoomId(socket.handshake.query.roomStr);
+  var PLAYER_ID = socket.id;
+  var ROOM_ID = socket.handshake.query.roomid;
 
-  SOCKET_LIST[playerid] = socket;
-  joinRoom(playerid, roomid);
+  SOCKET_LIST[PLAYER_ID] = socket;
+  joinRoom(PLAYER_ID, ROOM_ID);
   socket.on("disconnect", function () {
-    delete SOCKET_LIST[playerid];
-    leaveRoom(playerid, roomid);
+    delete SOCKET_LIST[PLAYER_ID];
+    leaveRoom(PLAYER_ID, ROOM_ID);
+  });
+  socket.on("clientEvent", function (data) {
+    var { eventName, eventData } = data;
+    console.log("Room[ ", ROOM_ID, " ] Received Event:", eventName);
+    if (eventName == "updateBox") updateRoom(eventData, ROOM_ID);
+    io.sockets.emit(`serverUpdate${ROOM_ID}`, ROOM_LIST[ROOM_ID]);
   });
 });
 
