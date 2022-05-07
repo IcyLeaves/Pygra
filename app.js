@@ -46,7 +46,6 @@ var ROOM_LIST = {};
 var ROOM_MAX_PLAYERS = 2;
 //str=room/12345
 function genPlayers(players) {
-  console.log("genPlayers", players);
   var emptyPlayers = [];
   for (var idx = 0; idx < ROOM_MAX_PLAYERS; idx++) {
     emptyPlayers.push({
@@ -71,9 +70,9 @@ function genBoards() {
     for (var col = 0; col < 4; col++) {
       var initBox = {
         color: "rgb(255,255,255)",
-        blues: [{ status: "none" }, { status: "none" }, { status: "none" }],
-        reds: [{ status: "none" }, { status: "none" }, { status: "none" }],
-        canChoose: true,
+        blues: [1, 1, 1],
+        reds: [1, 1, 1],
+        arrowDir: -1,
       };
       boxRow.push(initBox);
     }
@@ -123,11 +122,37 @@ function leaveRoom(playerid, roomid) {
     delete ROOM_LIST[roomid];
   }
 }
+
+function calBoards(roomid) {
+  var roomData = ROOM_LIST[roomid];
+  for (var boxRow of roomData.boxArray) {
+    for (var box of boxRow) {
+      for (var type = 0; type < 3; type++) {
+        //1.如果标志curr(2)，则移到done(3)
+        if (box.blues[type] == 2) box.blues[type] = 3;
+        else if (box.reds[type] == 2) box.reds[type] = 3;
+        //2.如果标志已done(3)，则将另一种颜色的标志设为-1
+        if (box.blues[type] == 3) box.reds[type] = -1;
+        else if (box.reds[type] == 3) box.blues[type] = -1;
+      }
+    }
+  }
+}
 function updateBox(data, roomid) {
   var { i, j, playerIdx, type } = data;
   var roomData = ROOM_LIST[roomid];
   var colorName = playerIdx == 0 ? "blues" : "reds";
-  roomData.boxArray[i][j][colorName][type].status = "off";
+  if (roomData.players[playerIdx].turn) {
+    roomData.players[playerIdx].turn = false;
+
+    roomData.players[1 - playerIdx].turn = true;
+    roomData.boxArray[i][j][colorName][type] = 2;
+    calBoards(roomid);
+    roomData.boxArray[i][j][colorName][type] = 2;
+    if (type == 0) {
+      roomData.boxArray[i][j].arrowDir = Math.floor(Math.random() * 4);
+    }
+  }
 }
 function startGame(data, roomid) {
   var init = Math.floor(Math.random() * 2);
