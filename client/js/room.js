@@ -13,6 +13,14 @@ var app = new Vue({
     COLORS: ["blue", "red"],
     TYPES: ["arrow", "circle", "square"],
     STATUS: ["-left", "-up", "-right", "-down"],
+    //
+    STATE: {
+      USED: 0,
+      NOPE: 1,
+      OK: 2,
+      CURR: 3,
+      DONE: 4,
+    },
   },
   methods: {
     LOG_SUCCESS(msg) {

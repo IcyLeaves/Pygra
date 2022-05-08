@@ -63,6 +63,20 @@ function genPlayers(players) {
   }
   return emptyPlayers;
 }
+//给定colorName和type得出一个标志的state:
+//USED: 已被另一种颜色使用
+//NOPE: 没被使用但也不可点击
+//OK: 可以点击
+//CURR: 上一步刚使用
+//DONE: 已归档
+
+var STATE = {
+  USED: 0,
+  NOPE: 1,
+  OK: 2,
+  CURR: 3,
+  DONE: 4,
+};
 function genBoards() {
   var boxes = [];
   for (var row = 0; row < 4; row++) {
@@ -70,8 +84,10 @@ function genBoards() {
     for (var col = 0; col < 4; col++) {
       var initBox = {
         color: "rgb(255,255,255)",
-        blues: [1, 1, 1],
-        reds: [1, 1, 1],
+        signs: [
+          [STATE.OK, STATE.OK, STATE.OK],
+          [STATE.OK, STATE.OK, STATE.OK],
+        ],
         arrowDir: -1,
       };
       boxRow.push(initBox);
@@ -123,34 +139,147 @@ function leaveRoom(playerid, roomid) {
   }
 }
 
-function calBoards(roomid) {
-  var roomData = ROOM_LIST[roomid];
-  for (var boxRow of roomData.boxArray) {
-    for (var box of boxRow) {
-      for (var type = 0; type < 3; type++) {
-        //1.如果标志curr(2)，则移到done(3)
-        if (box.blues[type] == 2) box.blues[type] = 3;
-        else if (box.reds[type] == 2) box.reds[type] = 3;
-        //2.如果标志已done(3)，则将另一种颜色的标志设为-1
-        if (box.blues[type] == 3) box.reds[type] = -1;
-        else if (box.reds[type] == 3) box.blues[type] = -1;
+function straight(doubleArr, x, y, dir) {
+  let M = doubleArr.length;
+  let N = doubleArr[0].length;
+  x = parseInt(x);
+  y = parseInt(y);
+  var res = [];
+  var dx = [0, -1, 0, 1];
+  var dy = [-1, 0, 1, 0];
+  x += dx[dir];
+  y += dy[dir];
+  while (0 <= x && x < M && 0 <= y && y < N) {
+    res.push(doubleArr[x][y]);
+    x += dx[dir];
+    y += dy[dir];
+  }
+  return res;
+}
+function nearEight(doubleArr, x, y) {
+  let M = doubleArr.length;
+  let N = doubleArr[0].length;
+  x = parseInt(x);
+  y = parseInt(y);
+  var res = [];
+  var d = [-1, 0, 1];
+  for (var i = 0; i < 3; i++) {
+    for (var j = 0; j < 3; j++) {
+      if (i == 1 && j == 1) continue;
+      var nx = x + d[i];
+      var ny = y + d[j];
+      if (nx < 0 || nx >= M || ny < 0 || ny >= N) {
+        res.push(undefined);
+        continue;
       }
+      res.push(doubleArr[nx][ny]);
     }
   }
+  return res;
 }
+
 function updateBox(data, roomid) {
   var { i, j, playerIdx, type } = data;
   var roomData = ROOM_LIST[roomid];
-  var colorName = playerIdx == 0 ? "blues" : "reds";
   if (roomData.players[playerIdx].turn) {
+    //递交回合
     roomData.players[playerIdx].turn = false;
-
     roomData.players[1 - playerIdx].turn = true;
-    roomData.boxArray[i][j][colorName][type] = 2;
-    calBoards(roomid);
-    roomData.boxArray[i][j][colorName][type] = 2;
+    //CURR->DONE
+    if (roomData.lastCurr) {
+      roomData.boxArray[roomData.lastCurr.x][roomData.lastCurr.y].signs[
+        1 - playerIdx
+      ][roomData.lastCurr.type] = STATE.DONE;
+    }
+    //CURR
+    var currBox = roomData.boxArray[i][j];
+    currBox.signs[playerIdx][type] = STATE.CURR;
     if (type == 0) {
-      roomData.boxArray[i][j].arrowDir = Math.floor(Math.random() * 4);
+      currBox.arrowDir = Math.floor(Math.random() * 4);
+    }
+    //lastCurr=CURR
+    roomData.lastCurr = {
+      x: i,
+      y: j,
+      type,
+    };
+    //另一个颜色type->USED
+    currBox.signs[1 - playerIdx][type] = STATE.USED;
+    //检查是否可以计分
+    var checkComplete = () => {
+      var cnt = 0;
+      var res = 0; //蓝加红减
+      for (var colorIdx in currBox.signs) {
+        for (var sign of currBox.signs[colorIdx]) {
+          if (sign == STATE.USED || sign == STATE.NOPE || sign == STATE.OK)
+            continue;
+          cnt++;
+          res += colorIdx == 0 ? 1 : -1;
+        }
+      }
+      if (cnt < 3) return -1;
+      if (res > 0) return 0;
+      return 1;
+    };
+    var result = checkComplete();
+    if (result != -1) {
+      roomData.players[result].points++;
+      var bgColor = ["#E3F2FD", "#FCE4EC"];
+      currBox.color = bgColor[result];
+    }
+    //上一步OK->NOPE
+    for (var boxRow of roomData.boxArray) {
+      for (var box of boxRow) {
+        for (var color of box.signs) {
+          for (var signIdx in color) {
+            if (color[signIdx] == STATE.OK) color[signIdx] = STATE.NOPE;
+          }
+        }
+      }
+    }
+    //NOPE->OK
+    var boxGoOK = (box) => {
+      var res = false;
+      for (var color of box.signs) {
+        for (var signIdx in color) {
+          if (color[signIdx] == STATE.NOPE) {
+            color[signIdx] = STATE.OK;
+            res = true;
+          }
+        }
+      }
+      return res;
+    };
+    var res = false;
+    switch (type) {
+      case 0:
+        //如果下的是箭头
+        for (var line of straight(roomData.boxArray, i, j, currBox.arrowDir)) {
+          if (boxGoOK(line)) {
+            res = true;
+          }
+        }
+        break;
+      case 1:
+        //如果下的是圆形
+        res = boxGoOK(currBox);
+        break;
+      case 2:
+        //如果下的是方形
+        for (var near of nearEight(roomData.boxArray, i, j)) {
+          if (!near) continue;
+          if (boxGoOK(near)) {
+            res = true;
+          }
+        }
+        break;
+    }
+    if (!res) {
+      for (var boxRow of roomData.boxArray) {
+        for (var box of boxRow) {
+          boxGoOK(box);
+        }
+      }
     }
   }
 }

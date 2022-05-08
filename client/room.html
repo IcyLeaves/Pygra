@@ -7,7 +7,7 @@
     <title>Pygra</title>
     <link rel="stylesheet" href="/client/_library/css/element.css" />
     <style>
-      .el-container{
+      .el-container {
         display: flex;
         flex-direction: column;
       }
@@ -30,40 +30,40 @@
         position: relative;
         min-width: 3rem;
       }
-      .el-row{
+      .el-row {
         margin: 10px 10px;
       }
     </style>
     <style>
-      .board-box .el-row{
-        margin:0;
-        height:33%
+      .board-box .el-row {
+        margin: 0;
+        height: 33%;
       }
-      .board-box img{
+      .board-box img {
         width: 1.8em;
         height: 1.8em;
         margin: 0.1em;
       }
     </style>
     <style>
-      .player-panel{
+      .player-panel {
         height: 100px;
       }
-      .player-panel img{
+      .player-panel img {
         width: 30px;
         height: 30px;
       }
-      .left-player{
-        background-color: #E3F2FD;
+      .left-player {
+        background-color: #e3f2fd;
       }
-      .left-player.turning{
-        background-color: #90CAF9;
+      .left-player.turning {
+        background-color: #90caf9;
       }
-      .right-player{
-        background-color: #FCE4EC;
+      .right-player {
+        background-color: #fce4ec;
       }
-      .right-player.turning{
-        background-color: #F48FB1;
+      .right-player.turning {
+        background-color: #f48fb1;
       }
     </style>
   </head>
@@ -71,69 +71,130 @@
     <div id="app">
       <el-container :show="isPrepared">
         <el-row>
-          <el-col v-for="(player,i) in ROOM_DATA.players" :key="player.id" :span="12" :class="['player-panel',i==0?'left-player':'right-player',ROOM_DATA.players[i].turn?'turning':'']">
+          <el-col
+            v-for="(player,i) in ROOM_DATA.players"
+            :key="player.id"
+            :span="12"
+            :class="['player-panel',i==0?'left-player':'right-player',ROOM_DATA.players[i].turn?'turning':'']"
+          >
             <el-row>
               <el-col :span="4"> Player {{i+1}} </el-col>
-              <el-col :span="20">{{player.name}}<el-tag v-show="playerIdx==i" type="success">这是你</el-tag> 分数：{{player.points}} </el-col>
+              <el-col :span="20"
+                >{{player.name}}<el-tag v-show="playerIdx==i" type="success"
+                  >这是你</el-tag
+                >
+                分数：{{player.points}}
+              </el-col>
             </el-row>
             <el-row>
               <el-col :span="4">
-                <img src="/client/img/blue-arrow.png" v-show="i==0"></img>
-                <img src="/client/img/red-arrow.png" v-show="i==1"></img>
+                <img src="/client/img/blue-arrow.png" v-show="i==0" />
+                <img src="/client/img/red-arrow.png" v-show="i==1" />
               </el-col>
               <el-col :span="4">{{player.arrows}}</el-col>
-              <el-col :span="4"><img src="/client/img/blue-circle.png" v-show="i==0"></img>
-                <img src="/client/img/red-circle.png" v-show="i==1"></img></el-col>
+              <el-col :span="4"
+                ><img src="/client/img/blue-circle.png" v-show="i==0" />
+                <img src="/client/img/red-circle.png" v-show="i==1"
+              /></el-col>
               <el-col :span="4">{{player.circles}}</el-col>
-              <el-col :span="4"><img src="/client/img/blue-square.png" v-show="i==0"></img>
-                <img src="/client/img/red-square.png" v-show="i==1"></img></el-col>
+              <el-col :span="4"
+                ><img src="/client/img/blue-square.png" v-show="i==0" />
+                <img src="/client/img/red-square.png" v-show="i==1"
+              /></el-col>
               <el-col :span="4">{{player.squares}}</el-col>
             </el-row>
           </el-col>
         </el-row>
-        
-        <el-row><div id="game-board">
-          <el-row
-            v-for="(itemRow,i) in ROOM_DATA.boxArray"
-            :key="'row'+i"
-            type="flex"
-            justify="center"
-          >
-            <div
-              class="board-box"
-              v-for="(item,j) in itemRow"
-              :key="'box'+i+j"
-              :id="'box-'+i+'-'+j"
+
+        <el-row
+          ><div id="game-board">
+            <el-row
+              v-for="(itemRow,i) in ROOM_DATA.boxArray"
+              :key="'row'+i"
+              type="flex"
+              justify="center"
             >
-          <el-row>
-            <el-col  v-for="(sign,type) in TYPES" :span="8">
-              <img :src="'/client/img/zero-'+sign+'.png'" v-show="item.blues[type]!=3 &&item.reds[type]!=3"></img>
-              <img :src="'/client/img/blue-'+sign+'.png'" v-show="item.blues[type]==3"></img>
-              <img :src="'/client/img/red-'+sign+'.png'" v-show="item.reds[type]==3"></img>
-            </el-col>
-          </el-row>
-          <el-row>
-            <img v-for="(status,dir) in STATUS" :src="'/client/img/blue-arrow'+status+'.png'" v-show="item.blues[0]==2 && item.arrowDir==dir"></img>
-            <img v-for="(status,dir) in STATUS" :src="'/client/img/red-arrow'+status+'.png'" v-show="item.reds[0]==2 && item.arrowDir==dir"></img>
-            
-            <img src="/client/img/blue-circle.png" v-show="item.blues[1] ==2"></img>
-            <img src="/client/img/blue-square.png" v-show="item.blues[2] ==2"></img>
-            <img src="/client/img/red-circle.png" v-show="item.reds[1] ==2"></img>
-            <img src="/client/img/red-square.png" v-show="item.reds[2] ==2"></img>
-          </el-row>
-          <el-row >
-            <div v-show="ROOM_DATA.players[playerIdx].turn"><img v-for="(sign,type) in TYPES" @click="clickBox" :data-i="i" :data-j="j" :data-type="type" :src="'/client/img/blue-'+sign+'-non.png'" v-show="playerIdx==0 &&item.blues[type] ==1"></img>
-              <img v-for="(sign,type) in TYPES" @click="clickBox" :data-i="i" :data-j="j" :data-type="type" :src="'/client/img/red-'+sign+'-non.png'" v-show="playerIdx==1 &&item.reds[type] ==1"></img>
-  </div>
-                      
-          </el-row>
+              <div
+                class="board-box"
+                v-for="(item,j) in itemRow"
+                :key="'box'+i+j"
+                :id="'box-'+i+'-'+j"
+                :style="'background-color: '+item.color"
+              >
+                <el-row>
+                  <el-col v-for="(sign,type) in TYPES" :span="8">
+                    <img
+                      :src="'/client/img/zero-'+sign+'.png'"
+                      v-show="item.signs[0][type]!=STATE.DONE &&item.signs[1][type]!=STATE.DONE"
+                    />
+                    <img
+                      :src="'/client/img/blue-'+sign+'.png'"
+                      v-show="item.signs[0][type]==STATE.DONE"
+                    />
+                    <img
+                      :src="'/client/img/red-'+sign+'.png'"
+                      v-show="item.signs[1][type]==STATE.DONE"
+                    />
+                  </el-col>
+                </el-row>
+                <el-row>
+                  <img
+                    v-for="(status,dir) in STATUS"
+                    :src="'/client/img/blue-arrow'+status+'.png'"
+                    v-show="item.signs[0][0]==STATE.CURR && item.arrowDir==dir"
+                  />
+                  <img
+                    v-for="(status,dir) in STATUS"
+                    :src="'/client/img/red-arrow'+status+'.png'"
+                    v-show="item.signs[1][0]==STATE.CURR && item.arrowDir==dir"
+                  />
+
+                  <img
+                    src="/client/img/blue-circle.png"
+                    v-show="item.signs[0][1] ==STATE.CURR"
+                  />
+                  <img
+                    src="/client/img/blue-square.png"
+                    v-show="item.signs[0][2] ==STATE.CURR"
+                  />
+                  <img
+                    src="/client/img/red-circle.png"
+                    v-show="item.signs[1][1] ==STATE.CURR"
+                  />
+                  <img
+                    src="/client/img/red-square.png"
+                    v-show="item.signs[1][2] ==STATE.CURR"
+                  />
+                </el-row>
+                <el-row>
+                  <div v-show="ROOM_DATA.players[playerIdx].turn">
+                    <img
+                      v-for="(sign,type) in TYPES"
+                      @click="clickBox"
+                      :data-i="i"
+                      :data-j="j"
+                      :data-type="type"
+                      :src="'/client/img/blue-'+sign+'-non.png'"
+                      v-show="playerIdx==0 &&item.signs[0][type] ==STATE.OK"
+                    />
+                    <img
+                      v-for="(sign,type) in TYPES"
+                      @click="clickBox"
+                      :data-i="i"
+                      :data-j="j"
+                      :data-type="type"
+                      :src="'/client/img/red-'+sign+'-non.png'"
+                      v-show="playerIdx==1 &&item.signs[1][type] ==STATE.OK"
+                    />
+                  </div>
+                </el-row>
+              </div>
+            </el-row>
           </div>
-          </el-row>
-        </div>
-      </el-row>
-      <el-row type="flex" justify="center">
-        <el-button @click="clickStartBtn">开始游戏</el-button>
-      </el-row>
+        </el-row>
+        <el-row type="flex" justify="center">
+          <el-button @click="clickStartBtn">开始游戏</el-button>
+        </el-row>
       </el-container>
     </div>
 
