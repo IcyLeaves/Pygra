@@ -175,7 +175,7 @@
                       :data-j="j"
                       :data-type="type"
                       :src="'/client/img/blue-'+sign+'-non.png'"
-                      v-show="playerIdx==0 &&item.signs[0][type] ==STATE.OK"
+                      v-show="ROOM_DATA.players[playerIdx][sign+'s']>0 && playerIdx==0 &&item.signs[0][type] ==STATE.OK"
                     />
                     <img
                       v-for="(sign,type) in TYPES"
@@ -184,7 +184,7 @@
                       :data-j="j"
                       :data-type="type"
                       :src="'/client/img/red-'+sign+'-non.png'"
-                      v-show="playerIdx==1 &&item.signs[1][type] ==STATE.OK"
+                      v-show="ROOM_DATA.players[playerIdx][sign+'s']>0 && playerIdx==1 &&item.signs[1][type] ==STATE.OK"
                     />
                   </div>
                 </el-row>

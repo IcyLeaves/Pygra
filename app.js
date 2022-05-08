@@ -197,6 +197,8 @@ function updateBox(data, roomid) {
     if (type == 0) {
       currBox.arrowDir = Math.floor(Math.random() * 4);
     }
+    var typeName = ["arrows", "circles", "squares"];
+    roomData.players[playerIdx][typeName[type]]--;
     //lastCurr=CURR
     roomData.lastCurr = {
       x: i,
